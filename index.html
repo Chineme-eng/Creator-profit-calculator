@@ -1,1 +1,1531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Creator Earnings Simulator</title>
+  <style>
+    :root {
+      --bg: #f7f0e6;
+      --panel: #fffaf3;
+      --panel-2: #fdf6ee;
+      --text: #151515;
+      --muted: #5d544c;
+      --line: #e8d7c4;
+      --accent: #e67e22;
+      --accent-2: #ff9f43;
+      --accent-soft: rgba(230, 126, 34, 0.14);
+      --shadow: 0 10px 30px rgba(25, 25, 25, 0.08);
+      --radius: 18px;
+    }
+
+    body.dark {
+      --bg: #1d1712;
+      --panel: #261e18;
+      --panel-2: #2f251d;
+      --text: #f6eee5;
+      --muted: #ccb8a7;
+      --line: #47392f;
+      --accent: #ff9f43;
+      --accent-2: #ffbc75;
+      --accent-soft: rgba(255, 159, 67, 0.18);
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Inter, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+      transition: background 0.25s ease, color 0.25s ease;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(10px);
+      background: color-mix(in srgb, var(--bg) 88%, transparent);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .topbar-inner,
+    .container {
+      width: min(1280px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .topbar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .brand-badge {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: white;
+      box-shadow: var(--shadow);
+      font-size: 1.1rem;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button,
+    select,
+    input,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn,
+    .btn-secondary,
+    .btn-ghost {
+      border-radius: 12px;
+      padding: 11px 14px;
+      font-weight: 700;
+      transition: transform 0.15s ease, opacity 0.15s ease, background 0.2s ease;
+    }
+
+    .btn:hover,
+    .btn-secondary:hover,
+    .btn-ghost:hover { transform: translateY(-1px); }
+
+    .btn {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: white;
+    }
+
+    .btn-secondary {
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text);
+      border: 1px dashed var(--line);
+    }
+
+    .hero {
+      padding: 28px 0 12px;
+    }
+
+    .hero-card {
+      background: linear-gradient(180deg, var(--panel), var(--panel-2));
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      padding: 28px;
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 18px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--line);
+      background: var(--accent-soft);
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    h1, h2, h3 { margin: 0; letter-spacing: -0.03em; }
+    h1 { font-size: clamp(2rem, 3vw, 3.1rem); line-height: 1.02; }
+    h2 { font-size: 1.25rem; }
+    h3 { font-size: 1rem; }
+
+    .hero p {
+      color: var(--muted);
+      max-width: 70ch;
+      margin: 14px 0 0;
+      font-size: 1rem;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      align-content: start;
+    }
+
+    .mini-stat {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 14px;
+    }
+
+    .mini-stat .label { color: var(--muted); font-size: 0.88rem; margin-bottom: 6px; }
+    .mini-stat .value { font-size: 1.2rem; font-weight: 800; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 410px 1fr;
+      gap: 18px;
+      padding: 18px 0 28px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .panel-header {
+      padding: 18px 18px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .panel-body {
+      padding: 18px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .grid.two { grid-template-columns: repeat(2, 1fr); }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .field label {
+      font-size: 0.92rem;
+      font-weight: 700;
+    }
+
+    .field small { color: var(--muted); }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 13px;
+      outline: none;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px var(--accent-soft);
+    }
+
+    .segmented {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .segmented button {
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-weight: 700;
+    }
+
+    .segmented button.active {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: var(--text);
+    }
+
+    .checkbox-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .chip-check {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 11px 12px;
+      font-weight: 700;
+    }
+
+    .chip-check input { width: auto; margin: 0; }
+
+    .results {
+      display: grid;
+      gap: 18px;
+      min-width: 0;
+    }
+
+    .cards-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 16px;
+    }
+
+    .money-card {
+      background: linear-gradient(180deg, var(--panel), var(--panel-2));
+      box-shadow: var(--shadow);
+    }
+
+    .money-title {
+      color: var(--muted);
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .money-value {
+      font-size: clamp(1.8rem, 2vw, 2.4rem);
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      margin-bottom: 6px;
+    }
+
+    .money-sub {
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .breakdown {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .break-item {
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+    }
+
+    .break-item .label {
+      color: var(--muted);
+      font-size: 0.88rem;
+      margin-bottom: 8px;
+    }
+
+    .break-item .value {
+      font-weight: 800;
+      font-size: 1.05rem;
+    }
+
+    .insight-list,
+    .notes-list,
+    .feature-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--accent-soft);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 7px 11px;
+      font-size: 0.86rem;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .insight,
+    .note,
+    .feature-item {
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      border-radius: 14px;
+      padding: 13px 14px;
+    }
+
+    .insight strong,
+    .note strong,
+    .feature-item strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+    }
+
+    .comparison-table th,
+    .comparison-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel);
+    }
+
+    .comparison-table th {
+      background: var(--panel-2);
+      font-size: 0.92rem;
+    }
+
+    .comparison-table tr:last-child td { border-bottom: none; }
+
+    .range-wrap {
+      display: grid;
+      gap: 8px;
+    }
+
+    input[type="range"] {
+      accent-color: var(--accent);
+      padding: 0;
+    }
+
+    .muted { color: var(--muted); }
+    .tiny { font-size: 0.84rem; }
+
+    .footer-space { height: 28px; }
+
+    @media (max-width: 1100px) {
+      .layout,
+      .hero-card {
+        grid-template-columns: 1fr;
+      }
+
+      .cards-3,
+      .breakdown {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 720px) {
+      .topbar-inner { align-items: flex-start; flex-direction: column; }
+      .grid.two,
+      .cards-3,
+      .breakdown,
+      .checkbox-row,
+      .hero-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .container,
+      .topbar-inner {
+        width: min(100% - 20px, 1280px);
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-badge">$</div>
+        <div>
+          <div>Creator Earnings Simulator</div>
+          <div class="muted tiny">Personal calculator for videos, reels, shorts, and creator monetization</div>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button class="btn-secondary" id="toggleTheme">Toggle Theme</button>
+        <button class="btn-ghost" id="saveProfileBtn">Save Profile</button>
+        <button class="btn-secondary" id="loadProfileBtn">Load Profile</button>
+        <button class="btn" id="goalJumpBtn">Goal Mode</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <div class="hero-card">
+        <div>
+          <div class="eyebrow">25 features • all 3 versions combined</div>
+          <h1>Estimate what a piece of content could be worth across platforms.</h1>
+          <p>
+            Pick a platform, choose your niche, enter views and followers, switch monetization models,
+            compare platforms, test scenarios, simulate monthly earnings, and see a strategic breakdown of
+            growth versus money.
+          </p>
+        </div>
+        <div class="hero-grid">
+          <div class="mini-stat">
+            <div class="label">Best for money</div>
+            <div class="value" id="heroBestMoney">—</div>
+          </div>
+          <div class="mini-stat">
+            <div class="label">Best for growth</div>
+            <div class="value" id="heroBestGrowth">—</div>
+          </div>
+          <div class="mini-stat">
+            <div class="label">Expected earnings</div>
+            <div class="value" id="heroMid">$0</div>
+          </div>
+          <div class="mini-stat">
+            <div class="label">Monthly projection</div>
+            <div class="value" id="heroMonthly">$0</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="layout">
+      <aside class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Inputs & Controls</h2>
+            <div class="muted tiny">Core, advanced, and power features</div>
+          </div>
+          <span class="pill">V1 + V2 + V3</span>
+        </div>
+        <div class="panel-body grid">
+          <div class="field">
+            <label for="platform">1. Platform</label>
+            <select id="platform"></select>
+          </div>
+
+          <div class="field">
+            <label for="contentType">2. Content Type</label>
+            <select id="contentType">
+              <option value="short">Short-form</option>
+              <option value="long">Long-form</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="niche">3. Niche</label>
+            <select id="niche"></select>
+          </div>
+
+          <div class="grid two">
+            <div class="field">
+              <label for="views">4. Views</label>
+              <input id="views" type="number" min="0" step="100" value="100000" />
+            </div>
+            <div class="field">
+              <label for="followers">5. Followers / Subscribers</label>
+              <input id="followers" type="number" min="0" step="10" value="10000" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="audienceTier">11. Audience Location</label>
+            <select id="audienceTier">
+              <option value="us">USA</option>
+              <option value="tier1">Tier 1 (UK/CA/AU)</option>
+              <option value="tier2">Tier 2</option>
+              <option value="global">Global / Mixed</option>
+            </select>
+          </div>
+
+          <div class="grid two">
+            <div class="field">
+              <label for="engagement">12. Engagement Rate (%)</label>
+              <input id="engagement" type="number" min="0" max="100" step="0.1" value="4.5" />
+            </div>
+            <div class="field">
+              <label for="frequency">14. Upload Frequency</label>
+              <select id="frequency">
+                <option value="1">Per single post</option>
+                <option value="4">Weekly (4/mo)</option>
+                <option value="8">2x per week (8/mo)</option>
+                <option value="12">3x per week (12/mo)</option>
+                <option value="20">5x per week (20/mo)</option>
+                <option value="30">Daily (30/mo)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>13. Monetization Mode</label>
+            <div class="segmented" id="monetizationModeWrap">
+              <button data-mode="ads" class="active">Ads Only</button>
+              <button data-mode="ads_sponsor">Ads + Sponsorships</button>
+              <button data-mode="ads_affiliate">Ads + Affiliate</button>
+              <button data-mode="full">Full Stack</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Additional Monetization Inputs</label>
+            <div class="grid two">
+              <div class="field">
+                <label for="ctr">Affiliate CTR (%)</label>
+                <input id="ctr" type="number" min="0" max="100" step="0.1" value="1.8" />
+              </div>
+              <div class="field">
+                <label for="conversion">Affiliate Conversion (%)</label>
+                <input id="conversion" type="number" min="0" max="100" step="0.1" value="3" />
+              </div>
+              <div class="field">
+                <label for="commission">Commission per Sale ($)</label>
+                <input id="commission" type="number" min="0" step="0.01" value="12" />
+              </div>
+              <div class="field">
+                <label for="sponsorRate">Sponsor Rate per 1K Followers ($)</label>
+                <input id="sponsorRate" type="number" min="0" step="0.1" value="18" />
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>20. Save Profiles</label>
+            <input id="profileName" type="text" placeholder="Example: Tech YouTube Baseline" />
+          </div>
+
+          <div class="field">
+            <label>21. Editable Backend Values</label>
+            <div class="checkbox-row">
+              <label class="chip-check"><input type="checkbox" id="enableCustomRates" /> Enable custom rates</label>
+              <label class="chip-check"><input type="checkbox" id="showFeatureMap" checked /> Show 25 features map</label>
+            </div>
+          </div>
+
+          <div class="grid two">
+            <div class="field">
+              <label for="customLow">Custom Low Rate / RPM</label>
+              <input id="customLow" type="number" min="0" step="0.01" value="0" />
+            </div>
+            <div class="field">
+              <label for="customHigh">Custom High Rate / RPM</label>
+              <input id="customHigh" type="number" min="0" step="0.01" value="0" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label>22. Scenario Simulator</label>
+            <div class="grid two">
+              <div class="field">
+                <label for="scenarioViews">Scenario Views</label>
+                <input id="scenarioViews" type="number" min="0" step="100" value="250000" />
+              </div>
+              <div class="field">
+                <label for="scenarioFollowers">Scenario Followers</label>
+                <input id="scenarioFollowers" type="number" min="0" step="10" value="25000" />
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>23. Goal Mode</label>
+            <div class="grid two">
+              <div class="field">
+                <label for="goalIncome">Target Monthly Income ($)</label>
+                <input id="goalIncome" type="number" min="0" step="50" value="1000" />
+              </div>
+              <div class="field">
+                <label for="goalPlatform">Goal Platform</label>
+                <select id="goalPlatform"></select>
+              </div>
+            </div>
+          </div>
+
+          <div class="field range-wrap">
+            <label for="viralMultiplier">24. Viral Spike Mode</label>
+            <input id="viralMultiplier" type="range" min="1" max="10" step="1" value="1" />
+            <small id="viralLabel">1x baseline</small>
+          </div>
+
+          <div class="field">
+            <label for="notes">Notes</label>
+            <textarea id="notes" rows="3" placeholder="Optional notes for your own assumptions..."></textarea>
+          </div>
+
+          <div class="grid two">
+            <button class="btn" id="calculateBtn">Calculate</button>
+            <button class="btn-secondary" id="resetBtn">Reset</button>
+          </div>
+        </div>
+      </aside>
+
+      <section class="results">
+        <div class="panel">
+          <div class="panel-header">
+            <div>
+              <h2>6. Earnings Output</h2>
+              <div class="muted tiny">Low, expected, and high estimate</div>
+            </div>
+            <span class="pill" id="activePlatformPill">—</span>
+          </div>
+          <div class="panel-body">
+            <div class="cards-3">
+              <div class="card money-card">
+                <div class="money-title">Low Estimate</div>
+                <div class="money-value" id="lowOut">$0</div>
+                <div class="money-sub">Conservative scenario</div>
+              </div>
+              <div class="card money-card">
+                <div class="money-title">Expected Estimate</div>
+                <div class="money-value" id="midOut">$0</div>
+                <div class="money-sub">Most realistic baseline</div>
+              </div>
+              <div class="card money-card">
+                <div class="money-title">High Estimate</div>
+                <div class="money-value" id="highOut">$0</div>
+                <div class="money-sub">Strong outcome</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <div>
+              <h2>7. Revenue Breakdown</h2>
+              <div class="muted tiny">Ads, sponsors, affiliate, bonus/gifts</div>
+            </div>
+            <span class="pill">8. Platform logic engine</span>
+          </div>
+          <div class="panel-body">
+            <div class="breakdown">
+              <div class="break-item">
+                <div class="label">Ads</div>
+                <div class="value" id="adsOut">$0</div>
+              </div>
+              <div class="break-item">
+                <div class="label">Sponsorships</div>
+                <div class="value" id="sponsorOut">$0</div>
+              </div>
+              <div class="break-item">
+                <div class="label">Affiliate</div>
+                <div class="value" id="affiliateOut">$0</div>
+              </div>
+              <div class="break-item">
+                <div class="label">Bonus / Other</div>
+                <div class="value" id="bonusOut">$0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cards-3">
+          <div class="panel card">
+            <div class="panel-header" style="padding:0 0 12px;">
+              <div>
+                <h2>16. Best Platform</h2>
+                <div class="muted tiny">Money, growth, balance</div>
+              </div>
+            </div>
+            <div class="insight-list" id="bestPlatformList"></div>
+          </div>
+
+          <div class="panel card">
+            <div class="panel-header" style="padding:0 0 12px;">
+              <div>
+                <h2>18. Effort vs Reward</h2>
+                <div class="muted tiny">How hard this format usually is</div>
+              </div>
+            </div>
+            <div class="insight-list" id="effortRewardList"></div>
+          </div>
+
+          <div class="panel card">
+            <div class="panel-header" style="padding:0 0 12px;">
+              <div>
+                <h2>14. Monthly Projection</h2>
+                <div class="muted tiny">Based on upload frequency</div>
+              </div>
+            </div>
+            <div class="insight-list" id="monthlyList"></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <div>
+              <h2>15. Side-by-Side Platform Comparison</h2>
+              <div class="muted tiny">Compare the same concept across major platforms</div>
+            </div>
+            <span class="pill">17. Reality check included</span>
+          </div>
+          <div class="panel-body">
+            <table class="comparison-table">
+              <thead>
+                <tr>
+                  <th>Platform</th>
+                  <th>Est. Earnings</th>
+                  <th>Growth Potential</th>
+                  <th>Money Stability</th>
+                  <th>Main Monetization</th>
+                </tr>
+              </thead>
+              <tbody id="comparisonBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="cards-3">
+          <div class="panel card">
+            <div class="panel-header" style="padding:0 0 12px;">
+              <div>
+                <h2>19. Content Strategy</h2>
+                <div class="muted tiny">Suggestion based on your inputs</div>
+              </div>
+            </div>
+            <div class="notes-list" id="strategyList"></div>
+          </div>
+
+          <div class="panel card">
+            <div class="panel-header" style="padding:0 0 12px;">
+              <div>
+                <h2>22. Scenario Simulator</h2>
+                <div class="muted tiny">What happens if your numbers grow?</div>
+              </div>
+            </div>
+            <div class="notes-list" id="scenarioList"></div>
+          </div>
+
+          <div class="panel card">
+            <div class="panel-header" style="padding:0 0 12px;">
+              <div>
+                <h2>23. Goal Mode</h2>
+                <div class="muted tiny">How much content you need</div>
+              </div>
+            </div>
+            <div class="notes-list" id="goalList"></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <div>
+              <h2>17. Reality Check & Platform Notes</h2>
+              <div class="muted tiny">Useful truth instead of fake precision</div>
+            </div>
+            <span class="pill">Ranges, not guarantees</span>
+          </div>
+          <div class="panel-body">
+            <div class="notes-list" id="realityList"></div>
+          </div>
+        </div>
+
+        <div class="panel" id="featureMapPanel">
+          <div class="panel-header">
+            <div>
+              <h2>25 Features Included</h2>
+              <div class="muted tiny">Mapped to the interface</div>
+            </div>
+            <span class="pill">24. Viral mode active too</span>
+          </div>
+          <div class="panel-body">
+            <div class="feature-list" id="featureList"></div>
+          </div>
+        </div>
+      </section>
+    </section>
+    <div class="footer-space"></div>
+  </main>
+
+  <script>
+    const platformData = {
+      youtube_long: {
+        name: 'YouTube Long-Form',
+        type: 'long',
+        category: 'rpm',
+        baseLow: 2.5,
+        baseHigh: 12,
+        sponsorStrength: 1.15,
+        growth: 7,
+        stability: 9,
+        effort: 'High effort / High reward',
+        payType: 'Ads (RPM)',
+        bonusFactor: 0.03,
+        notes: [
+          'Best for stable monetization when you have real watch time and good audience quality.',
+          'Finance, business, software, and education usually outperform entertainment RPM-wise.',
+          'Long-form takes more effort, but it usually gives the strongest long-term payoff.'
+        ]
+      },
+      youtube_shorts: {
+        name: 'YouTube Shorts',
+        type: 'short',
+        category: 'rpm',
+        baseLow: 0.02,
+        baseHigh: 0.15,
+        sponsorStrength: 0.65,
+        growth: 9,
+        stability: 4,
+        effort: 'Medium effort / Low to medium reward',
+        payType: 'Shorts pool + sponsor upside',
+        bonusFactor: 0.02,
+        notes: [
+          'Great for reach, weak for direct payouts compared with long-form.',
+          'More useful for funneling viewers into long-form, products, or sponsors.',
+          'A huge view count can still pay less than expected.'
+        ]
+      },
+      tiktok: {
+        name: 'TikTok',
+        type: 'short',
+        category: 'hybrid',
+        baseLow: 0.2,
+        baseHigh: 1.25,
+        sponsorStrength: 1.1,
+        growth: 10,
+        stability: 4,
+        effort: 'Medium effort / Medium reward',
+        payType: 'Rewards + sponsors + affiliate',
+        bonusFactor: 0.12,
+        notes: [
+          'Very strong for growth and discovery.',
+          'Most income usually comes from sponsorships, products, or affiliate links, not the platform payout alone.',
+          'Useful when you want fast reach or trend-based traction.'
+        ]
+      },
+      instagram_reels: {
+        name: 'Instagram Reels',
+        type: 'short',
+        category: 'sponsor',
+        baseLow: 0,
+        baseHigh: 0.12,
+        sponsorStrength: 1.35,
+        growth: 8,
+        stability: 3,
+        effort: 'Medium effort / Sponsor-heavy reward',
+        payType: 'Sponsors + affiliate',
+        bonusFactor: 0.05,
+        notes: [
+          'Direct view payouts are usually weak or inconsistent.',
+          'Value comes more from brand deals, affiliate offers, and audience conversion.',
+          'Aesthetic niches and strong personal brands often do very well here.'
+        ]
+      },
+      facebook_reels: {
+        name: 'Facebook Reels',
+        type: 'short',
+        category: 'hybrid',
+        baseLow: 0.1,
+        baseHigh: 1.8,
+        sponsorStrength: 0.8,
+        growth: 6,
+        stability: 5,
+        effort: 'Low to medium effort / Medium reward',
+        payType: 'Ads + bonus',
+        bonusFactor: 0.15,
+        notes: [
+          'Can surprise people with decent monetization on some content types.',
+          'Usually not as culturally strong as TikTok or YouTube for creator branding.',
+          'Worth repurposing content to if you already have short-form assets.'
+        ]
+      },
+      snapchat_spotlight: {
+        name: 'Snapchat Spotlight',
+        type: 'short',
+        category: 'bonus',
+        baseLow: 0.05,
+        baseHigh: 0.8,
+        sponsorStrength: 0.55,
+        growth: 7,
+        stability: 2,
+        effort: 'Low effort / Unstable reward',
+        payType: 'Bonus / pool based',
+        bonusFactor: 0.35,
+        notes: [
+          'Payouts can be inconsistent and hard to predict.',
+          'This is more of a bonus-style platform than a stable income source.',
+          'Good as an extra repurpose channel, not your whole plan.'
+        ]
+      },
+      x: {
+        name: 'X (Twitter)',
+        type: 'short',
+        category: 'hybrid',
+        baseLow: 0.01,
+        baseHigh: 0.25,
+        sponsorStrength: 1.0,
+        growth: 6,
+        stability: 2,
+        effort: 'Low effort / Low direct reward',
+        payType: 'Reply ads + sponsors',
+        bonusFactor: 0.03,
+        notes: [
+          'Useful for distribution, authority, and traffic more than direct view payout.',
+          'Strong if you are selling ideas, services, products, or newsletters.',
+          'Direct monetization is usually not the main reason to post here.'
+        ]
+      },
+      twitch: {
+        name: 'Twitch',
+        type: 'long',
+        category: 'community',
+        baseLow: 0,
+        baseHigh: 0.05,
+        sponsorStrength: 1.1,
+        growth: 5,
+        stability: 6,
+        effort: 'High effort / Community reward',
+        payType: 'Subs + donations',
+        bonusFactor: 0.08,
+        notes: [
+          'Views alone do not tell the story here.',
+          'Community loyalty matters more than raw reach.',
+          'Best when paired with a stronger discovery platform.'
+        ]
+      },
+      kick: {
+        name: 'Kick',
+        type: 'long',
+        category: 'community',
+        baseLow: 0,
+        baseHigh: 0.04,
+        sponsorStrength: 0.95,
+        growth: 4,
+        stability: 5,
+        effort: 'High effort / Community reward',
+        payType: 'Subs + gifts',
+        bonusFactor: 0.08,
+        notes: [
+          'Similar to streaming economics: loyalty matters more than view counts.',
+          'Not ideal for a simple view-based earnings model.',
+          'Works better if you have an established community elsewhere.'
+        ]
+      }
+    };
+
+    const nicheMultipliers = {
+      finance: 2.25,
+      business: 1.9,
+      tech: 1.6,
+      education: 1.45,
+      productivity: 1.35,
+      gaming: 0.9,
+      lifestyle: 0.95,
+      fitness: 1.1,
+      beauty: 1.05,
+      food: 0.95,
+      travel: 0.9,
+      entertainment: 0.8,
+      news: 1.0,
+      comedy: 0.75,
+      diy: 0.95
+    };
+
+    const audienceMultipliers = {
+      us: 1.35,
+      tier1: 1.15,
+      tier2: 0.85,
+      global: 0.75
+    };
+
+    const nicheSponsorBoost = {
+      finance: 1.55,
+      business: 1.4,
+      tech: 1.25,
+      education: 1.15,
+      productivity: 1.2,
+      gaming: 0.95,
+      lifestyle: 1.0,
+      fitness: 1.05,
+      beauty: 1.2,
+      food: 1.0,
+      travel: 1.05,
+      entertainment: 0.9,
+      news: 1.0,
+      comedy: 0.85,
+      diy: 0.95
+    };
+
+    const featureMap = [
+      '1. Platform selector',
+      '2. Content type selector',
+      '3. Niche selector',
+      '4. Views input',
+      '5. Followers/subscribers input',
+      '6. Low / expected / high earnings output',
+      '7. Revenue breakdown',
+      '8. Platform-based calculation engine',
+      '9. Niche multiplier system',
+      '10. Range generator',
+      '11. Audience location selector',
+      '12. Engagement rate input',
+      '13. Monetization mode toggle',
+      '14. Upload frequency and monthly projection',
+      '15. Side-by-side platform comparison',
+      '16. Best platform recommendation',
+      '17. Reality check section',
+      '18. Effort vs reward meter',
+      '19. Content strategy suggestion',
+      '20. Save profiles',
+      '21. Editable backend values',
+      '22. Scenario simulator',
+      '23. Goal mode',
+      '24. Viral spike mode',
+      '25. Clean dashboard UI'
+    ];
+
+    const el = id => document.getElementById(id);
+
+    let monetizationMode = 'ads';
+
+    function populateSelects() {
+      const platformSelect = el('platform');
+      const goalPlatform = el('goalPlatform');
+      Object.entries(platformData).forEach(([key, platform]) => {
+        const opt = new Option(platform.name, key);
+        const opt2 = new Option(platform.name, key);
+        platformSelect.add(opt);
+        goalPlatform.add(opt2);
+      });
+      platformSelect.value = 'youtube_long';
+      goalPlatform.value = 'youtube_long';
+
+      const nicheSelect = el('niche');
+      Object.keys(nicheMultipliers).forEach(key => {
+        nicheSelect.add(new Option(capitalize(key), key));
+      });
+      nicheSelect.value = 'tech';
+    }
+
+    function capitalize(str) {
+      return str.replace(/\b\w/g, c => c.toUpperCase());
+    }
+
+    function formatMoney(num) {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        maximumFractionDigits: num >= 100 ? 0 : 2
+      }).format(Number.isFinite(num) ? num : 0);
+    }
+
+    function getState(useScenario = false, useGoalPlatform = false) {
+      const platform = useGoalPlatform ? el('goalPlatform').value : el('platform').value;
+      const views = Number(useScenario ? el('scenarioViews').value : el('views').value) || 0;
+      const followers = Number(useScenario ? el('scenarioFollowers').value : el('followers').value) || 0;
+      const viralMultiplier = Number(el('viralMultiplier').value) || 1;
+      return {
+        platform,
+        contentType: el('contentType').value,
+        niche: el('niche').value,
+        views: views * viralMultiplier,
+        followers,
+        audienceTier: el('audienceTier').value,
+        engagement: Number(el('engagement').value) || 0,
+        frequency: Number(el('frequency').value) || 1,
+        ctr: (Number(el('ctr').value) || 0) / 100,
+        conversion: (Number(el('conversion').value) || 0) / 100,
+        commission: Number(el('commission').value) || 0,
+        sponsorRate: Number(el('sponsorRate').value) || 0,
+        enableCustomRates: el('enableCustomRates').checked,
+        customLow: Number(el('customLow').value) || 0,
+        customHigh: Number(el('customHigh').value) || 0,
+      };
+    }
+
+    function calculateEstimate(state) {
+      const platform = platformData[state.platform];
+      const nicheMult = nicheMultipliers[state.niche] || 1;
+      const audienceMult = audienceMultipliers[state.audienceTier] || 1;
+      const sponsorBoost = nicheSponsorBoost[state.niche] || 1;
+      const engagementBoost = Math.max(0.65, Math.min(1.75, 0.8 + (state.engagement / 10)));
+      const followerFactor = Math.max(0.35, Math.log10(Math.max(state.followers, 100)) / 3);
+
+      let lowRate = platform.baseLow * nicheMult * audienceMult;
+      let highRate = platform.baseHigh * nicheMult * audienceMult;
+
+      if (state.enableCustomRates && state.customLow > 0 && state.customHigh > 0) {
+        lowRate = state.customLow;
+        highRate = state.customHigh;
+      }
+
+      const avgRate = (lowRate + highRate) / 2;
+      let ads = 0;
+      let sponsor = 0;
+      let affiliate = 0;
+      let bonus = 0;
+
+      if (platform.category === 'rpm' || platform.category === 'hybrid' || platform.category === 'bonus' || platform.category === 'sponsor') {
+        ads = (state.views / 1000) * avgRate;
+      }
+
+      if (platform.category === 'bonus') {
+        bonus = (state.views / 1000) * (avgRate * platform.bonusFactor * 8);
+      } else if (platform.category === 'hybrid') {
+        bonus = (state.views / 1000) * (avgRate * platform.bonusFactor * 2.5);
+      } else {
+        bonus = (state.views / 1000) * (avgRate * platform.bonusFactor);
+      }
+
+      sponsor = (state.followers / 1000) * state.sponsorRate * sponsorBoost * platform.sponsorStrength * engagementBoost;
+
+      affiliate = state.views * state.ctr * state.conversion * state.commission * (0.55 + (sponsorBoost / 2));
+
+      if (platform.category === 'community') {
+        const subsEstimate = Math.max(0, state.followers * 0.008 * (2 + state.engagement / 10));
+        ads = (state.views / 1000) * avgRate;
+        bonus = subsEstimate * 0.4;
+        sponsor *= 0.8;
+      }
+
+      let mid = 0;
+      if (monetizationMode === 'ads') {
+        mid = ads + bonus;
+        sponsor = 0;
+        affiliate = 0;
+      } else if (monetizationMode === 'ads_sponsor') {
+        mid = ads + bonus + sponsor;
+        affiliate = 0;
+      } else if (monetizationMode === 'ads_affiliate') {
+        mid = ads + bonus + affiliate;
+        sponsor = 0;
+      } else {
+        mid = ads + bonus + sponsor + affiliate;
+      }
+
+      const low = mid * 0.6;
+      const high = mid * 1.8;
+
+      return {
+        low,
+        mid,
+        high,
+        ads,
+        sponsor,
+        affiliate,
+        bonus,
+        lowRate,
+        avgRate,
+        highRate,
+        platform,
+        monthlyMid: mid * state.frequency,
+        monthlyLow: low * state.frequency,
+        monthlyHigh: high * state.frequency,
+        effort: platform.effort,
+        payType: platform.payType,
+        growth: platform.growth,
+        stability: platform.stability,
+      };
+    }
+
+    function calculateComparison(baseState) {
+      return Object.keys(platformData).map(key => {
+        const estimate = calculateEstimate({ ...baseState, platform: key });
+        return { key, ...estimate };
+      }).sort((a, b) => b.mid - a.mid);
+    }
+
+    function renderFeatureMap() {
+      const list = el('featureList');
+      list.innerHTML = '';
+      featureMap.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'feature-item';
+        div.innerHTML = `<strong>${item}</strong><div class="muted tiny">Included in this single-file build.</div>`;
+        list.appendChild(div);
+      });
+    }
+
+    function renderAll() {
+      const state = getState();
+      const result = calculateEstimate(state);
+      const comparison = calculateComparison(state);
+      const scenarioResult = calculateEstimate(getState(true));
+      const goalState = getState(false, true);
+      const goalEstimate = calculateEstimate(goalState);
+      const goalIncome = Number(el('goalIncome').value) || 0;
+      const requiredPosts = goalEstimate.mid > 0 ? goalIncome / goalEstimate.mid : 0;
+      const requiredViews = goalEstimate.mid > 0 ? (goalIncome / goalEstimate.monthlyMid) * state.views : 0;
+
+      el('lowOut').textContent = formatMoney(result.low);
+      el('midOut').textContent = formatMoney(result.mid);
+      el('highOut').textContent = formatMoney(result.high);
+      el('adsOut').textContent = formatMoney(result.ads);
+      el('sponsorOut').textContent = formatMoney(result.sponsor);
+      el('affiliateOut').textContent = formatMoney(result.affiliate);
+      el('bonusOut').textContent = formatMoney(result.bonus);
+      el('activePlatformPill').textContent = result.platform.name;
+
+      el('heroBestMoney').textContent = comparison[0]?.platform.name || '—';
+      el('heroBestGrowth').textContent = [...comparison].sort((a, b) => b.growth - a.growth)[0]?.platform.name || '—';
+      el('heroMid').textContent = formatMoney(result.mid);
+      el('heroMonthly').textContent = formatMoney(result.monthlyMid);
+
+      renderBestPlatforms(comparison);
+      renderEffort(result, state);
+      renderMonthly(result);
+      renderComparison(comparison);
+      renderStrategy(result, comparison, state);
+      renderScenario(state, scenarioResult);
+      renderGoal(goalIncome, requiredPosts, requiredViews, goalEstimate);
+      renderReality(result, state);
+
+      el('featureMapPanel').style.display = el('showFeatureMap').checked ? 'block' : 'none';
+    }
+
+    function renderBestPlatforms(comparison) {
+      const growthRank = [...comparison].sort((a, b) => b.growth - a.growth);
+      const balanced = [...comparison].sort((a, b) => (b.mid * 0.55 + b.growth * 20 + b.stability * 20) - (a.mid * 0.55 + a.growth * 20 + a.stability * 20));
+      el('bestPlatformList').innerHTML = `
+        <div class="insight"><strong>Best for money</strong>${comparison[0].platform.name} — ${formatMoney(comparison[0].mid)}</div>
+        <div class="insight"><strong>Best for growth</strong>${growthRank[0].platform.name} — discovery score ${growthRank[0].growth}/10</div>
+        <div class="insight"><strong>Most balanced</strong>${balanced[0].platform.name} — solid mix of reach and payout</div>
+      `;
+    }
+
+    function renderEffort(result, state) {
+      const list = el('effortRewardList');
+      const contentMatch = platformData[state.platform].type === state.contentType ? 'Matches platform-native format' : 'You selected a format different from the platform default';
+      list.innerHTML = `
+        <div class="insight"><strong>Effort vs reward</strong>${result.effort}</div>
+        <div class="insight"><strong>Money stability</strong>${result.stability}/10</div>
+        <div class="insight"><strong>Format note</strong>${contentMatch}</div>
+      `;
+    }
+
+    function renderMonthly(result) {
+      el('monthlyList').innerHTML = `
+        <div class="insight"><strong>Monthly low</strong>${formatMoney(result.monthlyLow)}</div>
+        <div class="insight"><strong>Monthly expected</strong>${formatMoney(result.monthlyMid)}</div>
+        <div class="insight"><strong>Monthly high</strong>${formatMoney(result.monthlyHigh)}</div>
+      `;
+    }
+
+    function renderComparison(comparison) {
+      const body = el('comparisonBody');
+      body.innerHTML = comparison.slice(0, 7).map(item => `
+        <tr>
+          <td>${item.platform.name}</td>
+          <td>${formatMoney(item.mid)}</td>
+          <td>${item.growth}/10</td>
+          <td>${item.stability}/10</td>
+          <td>${item.payType}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderStrategy(result, comparison, state) {
+      const moneyLeader = comparison[0].platform.name;
+      const growthLeader = [...comparison].sort((a, b) => b.growth - a.growth)[0].platform.name;
+      const strategyItems = [
+        `If money matters most, prioritize ${moneyLeader} for this concept.`,
+        `If growth matters most, repurpose this for ${growthLeader} too.`,
+        state.contentType === 'short'
+          ? 'Short-form is better for reach; consider funneling viewers into a deeper asset.'
+          : 'Long-form is better for monetization depth and search longevity.',
+      ];
+      el('strategyList').innerHTML = strategyItems.map(item => `<div class="note"><strong>Suggestion</strong>${item}</div>`).join('');
+    }
+
+    function renderScenario(state, scenarioResult) {
+      el('scenarioList').innerHTML = `
+        <div class="note"><strong>Scenario expected</strong>${formatMoney(scenarioResult.mid)}</div>
+        <div class="note"><strong>Lift vs baseline</strong>${formatMoney(scenarioResult.mid - calculateEstimate(state).mid)}</div>
+        <div class="note"><strong>Takeaway</strong>If you hit the scenario numbers, this platform becomes ${scenarioResult.mid > calculateEstimate(state).mid * 2 ? 'significantly more worth chasing' : 'incrementally better'}.</div>
+      `;
+    }
+
+    function renderGoal(goalIncome, requiredPosts, requiredViews, goalEstimate) {
+      el('goalList').innerHTML = `
+        <div class="note"><strong>Target income</strong>${formatMoney(goalIncome)} / month</div>
+        <div class="note"><strong>Estimated posts needed</strong>${goalEstimate.mid > 0 ? requiredPosts.toFixed(1) : '—'} pieces of content</div>
+        <div class="note"><strong>Interpretation</strong>You need about ${Math.ceil(requiredPosts || 0)} posts at this performance level, or better performance per post.</div>
+      `;
+    }
+
+    function renderReality(result, state) {
+      const notes = [
+        ...result.platform.notes,
+        `Your current expected estimate uses a niche multiplier of ${nicheMultipliers[state.niche].toFixed(2)}x and an audience multiplier of ${audienceMultipliers[state.audienceTier].toFixed(2)}x.`,
+        'These numbers are directional estimates, not promises. Actual monetization changes with watch time, audience quality, offer strength, program eligibility, and seasonality.'
+      ];
+      el('realityList').innerHTML = notes.map(note => `<div class="note"><strong>Platform note</strong>${note}</div>`).join('');
+    }
+
+    function syncPlatformDefaults() {
+      const platform = platformData[el('platform').value];
+      el('contentType').value = platform.type;
+    }
+
+    function bindEvents() {
+      document.querySelectorAll('#monetizationModeWrap button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('#monetizationModeWrap button').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          monetizationMode = btn.dataset.mode;
+          renderAll();
+        });
+      });
+
+      [
+        'platform','contentType','niche','views','followers','audienceTier','engagement','frequency',
+        'ctr','conversion','commission','sponsorRate','enableCustomRates','customLow','customHigh',
+        'scenarioViews','scenarioFollowers','goalIncome','goalPlatform','viralMultiplier','showFeatureMap'
+      ].forEach(id => {
+        el(id).addEventListener('input', () => {
+          if (id === 'platform') syncPlatformDefaults();
+          if (id === 'viralMultiplier') el('viralLabel').textContent = `${el('viralMultiplier').value}x baseline`;
+          renderAll();
+        });
+        el(id).addEventListener('change', () => {
+          if (id === 'platform') syncPlatformDefaults();
+          if (id === 'viralMultiplier') el('viralLabel').textContent = `${el('viralMultiplier').value}x baseline`;
+          renderAll();
+        });
+      });
+
+      el('calculateBtn').addEventListener('click', renderAll);
+
+      el('resetBtn').addEventListener('click', () => {
+        el('platform').value = 'youtube_long';
+        syncPlatformDefaults();
+        el('niche').value = 'tech';
+        el('views').value = 100000;
+        el('followers').value = 10000;
+        el('audienceTier').value = 'us';
+        el('engagement').value = 4.5;
+        el('frequency').value = 1;
+        el('ctr').value = 1.8;
+        el('conversion').value = 3;
+        el('commission').value = 12;
+        el('sponsorRate').value = 18;
+        el('enableCustomRates').checked = false;
+        el('customLow').value = 0;
+        el('customHigh').value = 0;
+        el('scenarioViews').value = 250000;
+        el('scenarioFollowers').value = 25000;
+        el('goalIncome').value = 1000;
+        el('goalPlatform').value = 'youtube_long';
+        el('viralMultiplier').value = 1;
+        el('viralLabel').textContent = '1x baseline';
+        el('notes').value = '';
+        document.querySelectorAll('#monetizationModeWrap button').forEach(b => b.classList.remove('active'));
+        document.querySelector('#monetizationModeWrap button[data-mode="ads"]').classList.add('active');
+        monetizationMode = 'ads';
+        renderAll();
+      });
+
+      el('toggleTheme').addEventListener('click', () => {
+        document.body.classList.toggle('dark');
+        localStorage.setItem('creatorToolTheme', document.body.classList.contains('dark') ? 'dark' : 'light');
+      });
+
+      el('saveProfileBtn').addEventListener('click', () => {
+        const name = el('profileName').value.trim() || 'Default Profile';
+        const data = {
+          name,
+          theme: document.body.classList.contains('dark') ? 'dark' : 'light',
+          monetizationMode,
+          values: {
+            platform: el('platform').value,
+            contentType: el('contentType').value,
+            niche: el('niche').value,
+            views: el('views').value,
+            followers: el('followers').value,
+            audienceTier: el('audienceTier').value,
+            engagement: el('engagement').value,
+            frequency: el('frequency').value,
+            ctr: el('ctr').value,
+            conversion: el('conversion').value,
+            commission: el('commission').value,
+            sponsorRate: el('sponsorRate').value,
+            enableCustomRates: el('enableCustomRates').checked,
+            customLow: el('customLow').value,
+            customHigh: el('customHigh').value,
+            scenarioViews: el('scenarioViews').value,
+            scenarioFollowers: el('scenarioFollowers').value,
+            goalIncome: el('goalIncome').value,
+            goalPlatform: el('goalPlatform').value,
+            viralMultiplier: el('viralMultiplier').value,
+            notes: el('notes').value,
+          }
+        };
+        localStorage.setItem(`creatorProfile:${name}`, JSON.stringify(data));
+        alert(`Saved profile: ${name}`);
+      });
+
+      el('loadProfileBtn').addEventListener('click', () => {
+        const name = el('profileName').value.trim() || 'Default Profile';
+        const raw = localStorage.getItem(`creatorProfile:${name}`);
+        if (!raw) {
+          alert(`No saved profile found for: ${name}`);
+          return;
+        }
+        const data = JSON.parse(raw);
+        Object.entries(data.values).forEach(([key, value]) => {
+          if (el(key)) {
+            if (el(key).type === 'checkbox') el(key).checked = value;
+            else el(key).value = value;
+          }
+        });
+        monetizationMode = data.monetizationMode || 'ads';
+        document.querySelectorAll('#monetizationModeWrap button').forEach(b => {
+          b.classList.toggle('active', b.dataset.mode === monetizationMode);
+        });
+        document.body.classList.toggle('dark', data.theme === 'dark');
+        syncPlatformDefaults();
+        renderAll();
+        alert(`Loaded profile: ${name}`);
+      });
+
+      el('goalJumpBtn').addEventListener('click', () => {
+        document.getElementById('goalIncome').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el('goalIncome').focus();
+      });
+    }
+
+    function initTheme() {
+      const saved = localStorage.getItem('creatorToolTheme');
+      if (saved === 'dark') document.body.classList.add('dark');
+    }
+
+    populateSelects();
+    initTheme();
+    syncPlatformDefaults();
+    renderFeatureMap();
+    bindEvents();
+    renderAll();
+  </script>
+</body>
+</html>
 
