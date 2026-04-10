@@ -1094,6 +1094,13 @@ table.comp-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
 .btn-ghost { background: transparent; color: var(--ink-muted); border: 1.5px solid var(--cream-darker); }
 .btn-ghost:hover { color: var(--ink); border-color: var(--ink-muted); }
 
+/* ─── SMOOTH THEME TRANSITION ─── */
+body, .header, .card, .tool-card, .goal-card, .advice-card, 
+.plat-card, .niche-tag, .ct-btn, .styled-select, .theme-toggle,
+.results-card, .metric-box, .rpm-box {
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+  
 /* ─── DARK MODE ─── */
 body.dark {
   --cream: #1A1714;
@@ -3076,12 +3083,19 @@ function setMobActive(el) {
 }
 
 function toggleDark() {
+  // 1. Immediately toggle the class so the colors start transitioning
   document.body.classList.toggle('dark');
-  if (document.getElementById('page-charts')?.classList.contains('active')) {
-    renderCharts();
-    buildHeatmap();
-  }
-  if (document.getElementById('page-comparison')?.classList.contains('active')) renderComparison();
+  
+  // 2. Delay the heavy chart math by 10ms so it doesn't freeze the color animation
+  setTimeout(() => {
+    if (document.getElementById('page-charts')?.classList.contains('active')) {
+      renderCharts();
+      buildHeatmap();
+    }
+    if (document.getElementById('page-comparison')?.classList.contains('active')) {
+      renderComparison();
+    }
+  }, 10);
 }
 
 function exportPDF() {
